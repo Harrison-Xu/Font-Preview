@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.31)
 
-project(harrison_test VERSION 0.0.1 LANGUAGES C CXX)
+project(font_preview VERSION 0.3.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,7 +18,7 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 # USE_DESKTOP: whether to build desktop emulator, useful when you want preview with LVGL simulator
 # For instance, '-DUSE_DESKTOP=OFF' suggest building for CM0
 set(USE_DESKTOP ON CACHE BOOL "Build the desktop emulator target with LVGL SDL support")
-set(APP_NAME "${PROJECT_NAME}" CACHE STRING "Application name used for installed asset lookup")
+set(APP_NAME "${PROJECT_NAME}" CACHE STRING "Application name used for installed asset lookup" FORCE)
 set(APP_ASSETS_ROOT "" CACHE PATH "Optional runtime assets root. Expected subdirectories include fonts/")
 set(APP_KEY_INPUT_DEVICE "" CACHE STRING "Optional Linux evdev keyboard/keypad device path, e.g. /dev/input/event0")
 set(APP_FRAMEBUFFER_DEVICE "/dev/fb0" CACHE STRING "Linux framebuffer device path used by embedded builds")
@@ -413,37 +413,17 @@ add_library(${PROJECT_NAME}_model
 target_include_directories(${PROJECT_NAME}_model
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
+        ${PLATFORM_INCLUDE_DIR}
 )
 
 # ====================================================
 # View sources
 # ====================================================
-file(GLOB_RECURSE REACTIVE_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/reactive/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/reactive/*.cpp"
-)
-
-add_library(${PROJECT_NAME}_reactive
-    STATIC
-    ${REACTIVE_SOURCES}
-)
-
-target_include_directories(${PROJECT_NAME}_reactive
-    PUBLIC
-        ${LVGL_INCLUDE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/reactive
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/view
-)
-
-target_link_libraries(${PROJECT_NAME}_reactive
-    PUBLIC
-        lvgl
-)
-
 file(GLOB_RECURSE UI_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/view/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/view/*.cpp"  
 )
+list(APPEND UI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/app/asset_manager.cpp")
 
 add_library(${PROJECT_NAME}_view
     STATIC
@@ -454,11 +434,8 @@ target_include_directories(${PROJECT_NAME}_view
     PUBLIC
         ${LVGL_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/view
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/view/screens
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/view/widgets
         ${CMAKE_CURRENT_SOURCE_DIR}/src/app
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/reactive
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/viewmodel
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/logger
         ${CMAKE_CURRENT_SOURCE_DIR}/src/model
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform
 )
@@ -466,34 +443,7 @@ target_include_directories(${PROJECT_NAME}_view
 target_link_libraries(${PROJECT_NAME}_view
     PUBLIC
         lvgl
-        ${PROJECT_NAME}_reactive
-        ${PROJECT_NAME}_platform
-)
-
-# ====================================================
-# ViewModel sources
-# ====================================================
-file(GLOB_RECURSE VIEWMODEL_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/viewmodel/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/viewmodel/*.cpp"
-)
-
-add_library(${PROJECT_NAME}_viewmodel
-    STATIC
-    ${VIEWMODEL_SOURCES}
-)
-
-target_include_directories(${PROJECT_NAME}_viewmodel
-    PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/viewmodel/"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/model"
-        ${LVGL_INCLUDE_DIR}
-)
-
-target_link_libraries(${PROJECT_NAME}_viewmodel
-    PUBLIC
-        lvgl
-        ${PROJECT_NAME}_reactive
+        logger
         ${PROJECT_NAME}_model
         ${PROJECT_NAME}_platform
 )
@@ -502,15 +452,14 @@ target_link_libraries(${PROJECT_NAME}_viewmodel
 # ====================================================
 #   Core sources
 # - Application lifecycle management
-# - UI screen management
 # - UI asset management
-# - Reactive framework based on lvgl observer mode
 # - Project logger
 # ====================================================
 file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/app/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/app/*.cpp"
 )
+list(REMOVE_ITEM APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/app/asset_manager.cpp")
 
 file(GLOB_RECURSE LOGGER_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/logger/*.c"
@@ -540,9 +489,7 @@ target_include_directories(${PROJECT_NAME}_core
         ${LVGL_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/app
         ${CMAKE_CURRENT_SOURCE_DIR}/src/logger
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/view/screens
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/view/widgets
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/viewmodel
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/view
         ${CMAKE_CURRENT_SOURCE_DIR}/src/model
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform
 )
@@ -562,7 +509,7 @@ target_link_libraries(${PROJECT_NAME}_core
         lvgl
         logger
         ${PROJECT_NAME}_view
-        ${PROJECT_NAME}_viewmodel
+        ${PROJECT_NAME}_model
         ${PROJECT_NAME}_platform
 )
 
@@ -579,7 +526,6 @@ target_link_libraries(${PROJECT_NAME}
         ${PROJECT_NAME}_core
         ${PROJECT_NAME}_model
         ${PROJECT_NAME}_view
-        ${PROJECT_NAME}_viewmodel
 )
 
 # Package deb

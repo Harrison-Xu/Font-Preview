@@ -6,12 +6,18 @@
 
 #include "app.h"
 
-#include "asset_manager.h"
 #include "logger.h"
 #include "linux_input.h"
-#include "screen_manager.h"
-#include "base_viewmodel.h"
-#include "theme.h"
+#include "preview_screen.h"
+
+#if USE_DESKTOP
+#include "src/draw/snapshot/lv_snapshot.h"
+#include <png.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+#endif
 
 #if !USE_DESKTOP
 #if APP_USE_DRM
@@ -36,12 +42,64 @@
 namespace app {
 namespace {
 
-void quit_requested_observer(lv_observer_t* observer, lv_subject_t* subject) {
-    auto* running = static_cast<bool*>(lv_observer_get_user_data(observer));
-    if (running && lv_subject_get_int(subject)) {
-        *running = false;
+#if USE_DESKTOP
+bool write_snapshot_png(lv_obj_t* object, const char* path) {
+    auto* snapshot = lv_snapshot_take(object, LV_COLOR_FORMAT_ARGB8888);
+    if (!snapshot) return false;
+
+    FILE* file = std::fopen(path, "wb");
+    if (!file) {
+        lv_draw_buf_destroy(snapshot);
+        return false;
     }
+
+    auto* png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    auto* info = png ? png_create_info_struct(png) : nullptr;
+    if (!png || !info) {
+        if (png) png_destroy_write_struct(&png, nullptr);
+        std::fclose(file);
+        lv_draw_buf_destroy(snapshot);
+        return false;
+    }
+
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_write_struct(&png, &info);
+        std::fclose(file);
+        lv_draw_buf_destroy(snapshot);
+        return false;
+    }
+
+    png_init_io(png, file);
+    png_set_IHDR(png,
+                 info,
+                 snapshot->header.w,
+                 snapshot->header.h,
+                 8,
+                 PNG_COLOR_TYPE_RGB,
+                 PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
+    png_write_info(png, info);
+
+    std::vector<uint8_t> rgb(static_cast<std::size_t>(snapshot->header.w) * 3U);
+    for (uint32_t y = 0; y < snapshot->header.h; ++y) {
+        const auto* source = reinterpret_cast<const lv_color32_t*>(
+            snapshot->data + static_cast<std::size_t>(y) * snapshot->header.stride);
+        for (uint32_t x = 0; x < snapshot->header.w; ++x) {
+            rgb[x * 3U] = source[x].red;
+            rgb[x * 3U + 1U] = source[x].green;
+            rgb[x * 3U + 2U] = source[x].blue;
+        }
+        png_write_row(png, rgb.data());
+    }
+
+    png_write_end(png, info);
+    png_destroy_write_struct(&png, &info);
+    std::fclose(file);
+    lv_draw_buf_destroy(snapshot);
+    return true;
 }
+#endif
 
 lv_display_t* init_display() {
 #if USE_DESKTOP
@@ -50,7 +108,7 @@ lv_display_t* init_display() {
         return nullptr;
     }
 
-    lv_sdl_window_set_title(display, "HarrisonTest");
+    lv_sdl_window_set_title(display, "Font Preview");
     lv_sdl_window_set_resizeable(display, false);
     lv_sdl_mouse_create();
     lv_sdl_mousewheel_create();
@@ -88,9 +146,12 @@ lv_display_t* init_display() {
 
 } // namespace
 
+Application::Application() = default;
+Application::~Application() = default;
+
 int Application::run() {
     logger::Logger::init();
-    logger::Logger::set_tag("harrisontest");
+    logger::Logger::set_tag("font-preview");
 
     lv_init();
 
@@ -100,34 +161,75 @@ int Application::run() {
         return 1;
     }
 
-    AssetManager assets;
-    for (const auto& root : assets.roots()) {
+    for (const auto& root : assets_.roots()) {
         LOG_INFO("asset root: {}", root.string());
     }
 
-    viewmodel::BaseViewModel view_model;
-    view::apply_lvgl_theme(display, view_model.is_dark_mode());
+    constexpr const char* kRequiredFonts[] = {
+        "NotoSansCJK-Regular.ttc",
+        "NotoSansCJK-Bold.ttc",
+        "NotoSerifCJK-Regular.ttc",
+        "NotoSerifCJK-Bold.ttc",
+        "NotoSansMonoCJK-Regular.otf",
+        "NotoSansMonoCJK-Bold.otf",
+    };
+    for (const auto* font : kRequiredFonts) {
+        if (assets_.resolve_font(font).empty()) {
+            LOG_ERROR("required Noto CJK font is missing: {}", font);
+            return 1;
+        }
+    }
 
-    ScreenManager screen_manager(view_model, assets);
-    screen_manager.start();
+    screen_ = std::make_unique<view::PreviewScreen>(model_, assets_);
+    if (!screen_->build()) {
+        LOG_ERROR("failed to build preview screen");
+        return 1;
+    }
 
-    bool running = true;
-    auto* quit_observer = lv_subject_add_observer(view_model.quit_requested_subject(),
-                                                  quit_requested_observer,
-                                                  &running);
+    int result = 0;
+    platform::set_key_event_handler(key_event, this);
+    lv_screen_load(screen_->root());
 
-    LOG_INFO("LVGL app started at {}x{}", lv_display_get_horizontal_resolution(display),
-             lv_display_get_vertical_resolution(display));
-    while (running) {
+#if USE_DESKTOP
+    if (const char* capture_path = std::getenv("APP_CAPTURE_PATH")) {
+        lv_obj_update_layout(screen_->root());
+        if (!write_snapshot_png(screen_->root(), capture_path)) {
+            LOG_ERROR("failed to write preview snapshot: {}", capture_path);
+            result = 1;
+        }
+        else {
+            LOG_INFO("wrote preview snapshot: {}", capture_path);
+        }
+        running_ = false;
+    }
+#endif
+
+    if (running_) {
+        LOG_INFO("LVGL app started at {}x{}", lv_display_get_horizontal_resolution(display),
+                 lv_display_get_vertical_resolution(display));
+    }
+    while (running_) {
         lv_timer_handler();
         lv_delay_ms(5);
     }
 
-    if (quit_observer) {
-        lv_observer_remove(quit_observer);
-    }
+    platform::set_key_event_handler(nullptr, nullptr);
+    lv_display_delete(display);
+    screen_.reset();
+    return result;
+}
 
-    return 0;
+void Application::key_event(uint32_t key, bool pressed, void* user_data) {
+    auto* application = static_cast<Application*>(user_data);
+    if (application) application->handle_key(key, pressed);
+}
+
+void Application::handle_key(uint32_t key, bool pressed) {
+    if (key == LV_KEY_ESC && pressed) {
+        running_ = false;
+        return;
+    }
+    if (screen_) screen_->handle_key(key, pressed);
 }
 
 } // namespace app

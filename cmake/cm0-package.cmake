@@ -6,12 +6,11 @@
 
 include(GNUInstallDirs)
 
-set(APP_DISPLAY_NAME "HarrisonTest" CACHE STRING "Human-readable application name used by launchers and package filename")
-set(APP_DEBIAN_REVISION "m5stack" CACHE STRING "Debian package revision/vendor suffix")
+set(APP_DISPLAY_NAME "FontPreview" CACHE STRING "Human-readable application name used by launchers and package filename" FORCE)
+set(APP_DEBIAN_REVISION "m5stack1" CACHE STRING "Debian package revision/vendor suffix" FORCE)
 set(APP_DEBIAN_ARCHITECTURE "arm64" CACHE STRING "Debian package architecture")
 set(APP_MAINTAINER "XuHaifeng <Harrison-Xu@users.noreply.github.com>" CACHE STRING "Debian package maintainer")
-set(APP_PACKAGE_DESCRIPTION "CardputerZero packaging flow demo" CACHE STRING "Debian package summary")
-set(APP_INSTALL_SYSTEMD_SERVICE ON CACHE BOOL "Install a systemd service file for embedded deployments")
+set(APP_PACKAGE_DESCRIPTION "Multilingual font and typeface preview for CardputerZero" CACHE STRING "Debian package summary" FORCE)
 
 set(APP_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/package")
 configure_file(
@@ -20,22 +19,10 @@ configure_file(
     @ONLY
 )
 
-if(APP_INSTALL_SYSTEMD_SERVICE)
-    configure_file(
-        "${CMAKE_CURRENT_LIST_DIR}/templates/app.service.in"
-        "${APP_GENERATED_DIR}/${PROJECT_NAME}.service"
-        @ONLY
-    )
-endif()
-
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/audio/"
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/${APP_NAME}/audio"
-    PATTERN ".DS_Store" EXCLUDE
-)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/${APP_NAME}/fonts"
     PATTERN ".DS_Store" EXCLUDE
@@ -47,25 +34,19 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/"
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/APPLaunch/share/images"
     FILES_MATCHING
-    PATTERN "harrison_test*.png"
+    PATTERN "font_preview*.png"
 )
 
 install(FILES "${APP_GENERATED_DIR}/${PROJECT_NAME}.desktop"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/APPLaunch/applications"
 )
 
-if(APP_INSTALL_SYSTEMD_SERVICE)
-    install(FILES "${APP_GENERATED_DIR}/${PROJECT_NAME}.service"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/systemd/system"
-    )
-endif()
-
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
     DESTINATION "${CMAKE_INSTALL_DOCDIR}"
 )
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/LICENSE.txt"
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/LICENSE-NOTO-CJK.txt"
     DESTINATION "${CMAKE_INSTALL_DOCDIR}"
-    RENAME "third-party-assets-license.txt"
+    RENAME "noto-cjk-license.txt"
 )
 
 set(CPACK_GENERATOR "DEB")
@@ -77,7 +58,7 @@ set(CPACK_PACKAGE_CONTACT "${APP_MAINTAINER}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${APP_PACKAGE_DESCRIPTION}")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME "${APP_DISPLAY_NAME}_${PROJECT_VERSION}_${APP_DEBIAN_REVISION}_${APP_DEBIAN_ARCHITECTURE}")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/LICENSE.txt")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 
 string(TOLOWER "${APP_DISPLAY_NAME}" APP_DEBIAN_PACKAGE_NAME)
 string(REGEX REPLACE "[^a-z0-9+.-]" "-" APP_DEBIAN_PACKAGE_NAME "${APP_DEBIAN_PACKAGE_NAME}")
@@ -88,7 +69,10 @@ set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${APP_DEBIAN_ARCHITECTURE}")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${APP_MAINTAINER}")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libstdc++6, libgcc-s1, libfreetype6, libpng16-16, libjpeg62-turbo, zlib1g")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libstdc++6, libgcc-s1, libfreetype6, libpng16-16, libjpeg62-turbo, zlib1g, fonts-go, fonts-inter, fonts-dejavu-core, fonts-dejavu-extra, fonts-dejavu-mono, fonts-jetbrains-mono")
+set(CPACK_DEBIAN_PACKAGE_CONFLICTS "notocjkpreview")
+set(CPACK_DEBIAN_PACKAGE_REPLACES "notocjkpreview")
+set(CPACK_DEBIAN_PACKAGE_PROVIDES "notocjkpreview")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION TRUE)
 

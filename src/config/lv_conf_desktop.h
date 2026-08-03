@@ -192,3 +192,6 @@
 #define LV_USE_SHADOW                      1
 #define LV_USE_GRADIENTS                   1
 #define LV_OBJ_STYLE_CACHE                 1
+
+/* Headless screenshot support used by the visual regression check. */
+#define LV_USE_SNAPSHOT                    1

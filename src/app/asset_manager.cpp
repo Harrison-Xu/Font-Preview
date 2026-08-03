@@ -16,7 +16,7 @@
 #include <utility>
 
 #ifndef APP_NAME
-#define APP_NAME "harrison_test"
+#define APP_NAME "font_preview"
 #endif
 
 #ifndef APP_CMAKE_ASSETS_ROOT
@@ -46,6 +46,7 @@ std::filesystem::path weakly_canonical_path(const std::filesystem::path& path) {
 struct AssetManager::LoadedFont {
     std::filesystem::path path;
     uint32_t size;
+    bool synthetic_italic;
     lv_font_t* font;
 };
 
@@ -95,10 +96,15 @@ std::filesystem::path AssetManager::resolve(const std::filesystem::path& relativ
 }
 
 std::filesystem::path AssetManager::resolve_font(const std::filesystem::path& file_name) const {
+    if (file_name.is_absolute()) {
+        return resolve(file_name);
+    }
     return resolve(std::filesystem::path{"fonts"} / file_name);
 }
 
-lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name, uint32_t size) {
+lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name,
+                                   uint32_t size,
+                                   bool synthetic_italic) {
 #if LV_USE_FREETYPE
     auto path = resolve_font(file_name);
     if (path.empty()) {
@@ -107,7 +113,8 @@ lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name, uint3
     }
 
     auto existing = std::find_if(loaded_fonts_.begin(), loaded_fonts_.end(), [&](const auto& loaded_font) {
-        return loaded_font && loaded_font->path == path && loaded_font->size == size;
+        return loaded_font && loaded_font->path == path && loaded_font->size == size &&
+               loaded_font->synthetic_italic == synthetic_italic;
     });
     if (existing != loaded_fonts_.end()) {
         return (*existing)->font;
@@ -116,14 +123,17 @@ lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name, uint3
     lv_font_t* font = lv_freetype_font_create(path.string().c_str(),
                                               LV_FREETYPE_FONT_RENDER_MODE_BITMAP,
                                               size,
-                                              LV_FREETYPE_FONT_STYLE_NORMAL);
+                                              synthetic_italic ? LV_FREETYPE_FONT_STYLE_ITALIC
+                                                               : LV_FREETYPE_FONT_STYLE_NORMAL);
     if (!font) {
         LOG_WARN("failed to load freetype font: {}", path.string());
         return nullptr;
     }
 
-    loaded_fonts_.push_back(std::make_unique<LoadedFont>(LoadedFont{path, size, font}));
-    LOG_INFO("loaded freetype font: {} ({})", path.string(), size);
+    loaded_fonts_.push_back(
+        std::make_unique<LoadedFont>(LoadedFont{path, size, synthetic_italic, font}));
+    LOG_INFO("loaded freetype font: {} ({}px{})", path.string(), size,
+             synthetic_italic ? ", synthetic italic" : "");
     return font;
 #else
     LV_UNUSED(file_name);

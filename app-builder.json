@@ -1,46 +1,48 @@
 {
-  "package_name": "harrisontest",
-  "version": "0.0.1",
-  "app_name": "HarrisonTest",
-  "bin_name": "harrison_test",
-  "description": "CardputerZero packaging and AppStore publishing flow demo.",
+  "package_name": "fontpreview",
+  "version": "0.3.1",
+  "app_name": "Font Preview",
+  "bin_name": "font_preview",
+  "description": "Preview multilingual text with Noto CJK, Go, Inter, DejaVu, and JetBrains Mono.",
   "runtime": "legacy-deb-only",
   "caps": [
     "keyboard"
   ],
   "store": {
-    "summary": "A CardputerZero packaging flow demo.",
-    "description": "HarrisonTest is a small LVGL application for validating the CardputerZero build, packaging, device deployment, and AppStore publishing workflow.",
+    "summary": "Preview multilingual text with five font families.",
+    "description": "A focused typography preview for CardputerZero. Compare nine languages and code with five font families, six typeface styles, 8–24 px sizes, two weights, and eight color schemes.",
     "categories": [
       "Utilities"
     ],
-    "icon": "assets/images/harrison_test.png",
-    "screenshots": ["assets/images/harrison_test.png"],
+    "icon": "assets/images/font_preview.png",
+    "screenshots": [
+      "screenshot/font_preview.png"
+    ],
     "locales": {
       "zh-CN": {
-        "title": "HarrisonTest",
-        "summary": "用于验证 CardputerZero 应用打包流程的演示应用。",
-        "description": "HarrisonTest 是一个小型 LVGL 应用，用于验证 CardputerZero 的构建、打包、真机部署和 AppStore 发布流程。"
+        "title": "字体预览",
+        "summary": "预览五种字体的多语言、字号和字重效果。",
+        "description": "专为 CardputerZero 设计的字体预览应用。可用九种语言和代码内容比较五种字体、六种字体形态、8–24 px 字号、两种字重和八种配色。"
       },
       "en": {
-        "title": "HarrisonTest",
-        "summary": "A CardputerZero packaging flow demo.",
-        "description": "HarrisonTest is a small LVGL application for validating the CardputerZero build, packaging, device deployment, and AppStore publishing workflow."
+        "title": "Font Preview",
+        "summary": "Preview multilingual text with five font families.",
+        "description": "A focused typography preview for CardputerZero. Compare nine languages and code with five font families, six typeface styles, 8–24 px sizes, two weights, and eight color schemes."
       },
       "ja": {
-        "title": "HarrisonTest",
-        "summary": "CardputerZero のパッケージ作成フローを検証するデモアプリです。",
-        "description": "HarrisonTest は、CardputerZero のビルド、パッケージ作成、実機へのデプロイ、AppStore 公開フローを検証するための小規模な LVGL アプリです。"
+        "title": "フォントプレビュー",
+        "summary": "5 種類のフォントで多言語表示を確認できます。",
+        "description": "CardputerZero 向けのフォントプレビューアプリです。9 言語とコードを5種類のフォント、6種類の書体、8～24 px、2ウェイト、8配色で比較できます。"
       }
     },
     "license": "MIT",
-    "source_repo": "https://github.com/Harrison-Xu/Template",
+    "source_repo": "https://github.com/Harrison-Xu/Font-Preview",
     "permissions": {
       "microphone": false,
       "audio_output": false,
       "network": false,
       "keyboard_input": true,
-      "background_service": true,
+      "background_service": false,
       "external_hardware": false
     }
   }

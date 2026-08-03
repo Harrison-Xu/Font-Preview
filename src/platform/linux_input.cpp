@@ -1,6 +1,5 @@
 #include "linux_input.h"
 
-#include <array>
 #include <cstdint>
 #include <cstring>
 
@@ -21,44 +20,17 @@
 namespace platform {
 namespace {
 
-std::array<lv_obj_t*, kNavKeyCount> nav_buttons{};
-uint32_t last_key = 0;
-bool last_key_pressed = false;
+KeyEventHandler key_event_handler = nullptr;
+void* key_event_user_data = nullptr;
 
-size_t nav_key_to_index(uint32_t key) {
-    switch (key) {
-        case '4':
-        case LV_KEY_ESC:
-            return 0;
-        case '5':
-            return 1;
-        case '6':
-            return 2;
-        case '7':
-            return 3;
-        case '8':
-            return 4;
-        default:
-            return kNavKeyCount;
-    }
-}
-
-void dispatch_nav_key(uint32_t key) {
-    const auto index = nav_key_to_index(key);
-    if (index >= nav_buttons.size()) {
-        return;
-    }
-
-    auto* button = nav_buttons[index];
-    if (!button || !lv_obj_is_valid(button) || !lv_obj_has_flag(button, LV_OBJ_FLAG_CLICKABLE)) {
-        return;
-    }
-
-    lv_obj_send_event(button, LV_EVENT_CLICKED, nullptr);
-}
+struct KeyRouterState {
+    uint32_t last_key{0};
+    bool last_key_pressed{false};
+};
 
 void key_event_cb(lv_event_t* event) {
-    LV_UNUSED(event);
+    auto* router = static_cast<KeyRouterState*>(lv_event_get_user_data(event));
+    if (!router) return;
 
     auto* indev = lv_indev_active();
     if (!indev) {
@@ -68,12 +40,19 @@ void key_event_cb(lv_event_t* event) {
     const auto key = lv_indev_get_key(indev);
     const bool pressed = lv_indev_get_state(indev) == LV_INDEV_STATE_PRESSED;
 
-    if (pressed && (!last_key_pressed || last_key != key)) {
-        dispatch_nav_key(key);
+    if (pressed && (!router->last_key_pressed || router->last_key != key)) {
+        if (key_event_handler) key_event_handler(key, true, key_event_user_data);
+    }
+    else if (!pressed && router->last_key_pressed && router->last_key == key) {
+        if (key_event_handler) key_event_handler(key, false, key_event_user_data);
     }
 
-    last_key = key;
-    last_key_pressed = pressed;
+    router->last_key = key;
+    router->last_key_pressed = pressed;
+}
+
+void key_router_delete_cb(lv_event_t* event) {
+    delete static_cast<KeyRouterState*>(lv_event_get_user_data(event));
 }
 
 #if !USE_DESKTOP
@@ -87,16 +66,22 @@ uint32_t map_evdev_key(uint16_t code) {
     switch (code) {
         case KEY_ESC:
             return LV_KEY_ESC;
-        case KEY_4:
-            return '4';
-        case KEY_5:
-            return '5';
-        case KEY_6:
-            return '6';
-        case KEY_7:
-            return '7';
-        case KEY_8:
-            return '8';
+        case KEY_UP:
+        case KEY_F:
+            return LV_KEY_UP;
+        case KEY_DOWN:
+        case KEY_X:
+            return LV_KEY_DOWN;
+        case KEY_LEFT:
+        case KEY_Z:
+            return LV_KEY_LEFT;
+        case KEY_RIGHT:
+        case KEY_C:
+            return LV_KEY_RIGHT;
+        case KEY_L:
+            return 'l';
+        case KEY_M:
+            return 'm';
         default:
             return 0;
     }
@@ -113,8 +98,9 @@ bool has_nav_keys(int fd) {
         return (key_bits[code / bits_per_word] & (1UL << (code % bits_per_word))) != 0;
     };
 
-    return has_key(KEY_ESC) || has_key(KEY_4) || has_key(KEY_5) || has_key(KEY_6) ||
-           has_key(KEY_7) || has_key(KEY_8);
+    return has_key(KEY_ESC) || has_key(KEY_F) || has_key(KEY_X) || has_key(KEY_Z) || has_key(KEY_C) ||
+           has_key(KEY_L) || has_key(KEY_M) ||
+           has_key(KEY_UP) || has_key(KEY_DOWN) || has_key(KEY_LEFT) || has_key(KEY_RIGHT);
 }
 
 void evdev_read_cb(lv_indev_t* indev, lv_indev_data_t* data) {
@@ -193,6 +179,10 @@ lv_indev_t* try_create_keypad(const char* path) {
         return nullptr;
     }
 
+    input_event stale{};
+    while (read(fd, &stale, sizeof(stale)) == sizeof(stale)) {
+    }
+
     LV_LOG_INFO("using evdev key input %s", path);
     return create_keypad_from_fd(fd);
 }
@@ -245,25 +235,14 @@ void attach_key_router(lv_indev_t* indev) {
         return;
     }
 
-    lv_indev_add_event_cb(indev, key_event_cb, LV_EVENT_KEY, nullptr);
+    auto* router = new KeyRouterState;
+    lv_indev_add_event_cb(indev, key_event_cb, LV_EVENT_KEY, router);
+    lv_indev_add_event_cb(indev, key_router_delete_cb, LV_EVENT_DELETE, router);
 }
 
-void register_nav_button(size_t index, lv_obj_t* button) {
-    if (index >= nav_buttons.size()) {
-        return;
-    }
-
-    nav_buttons[index] = button;
-}
-
-void unregister_nav_button(size_t index, lv_obj_t* button) {
-    if (index >= nav_buttons.size()) {
-        return;
-    }
-
-    if (!button || nav_buttons[index] == button) {
-        nav_buttons[index] = nullptr;
-    }
+void set_key_event_handler(KeyEventHandler handler, void* user_data) {
+    key_event_handler = handler;
+    key_event_user_data = user_data;
 }
 
 } // namespace platform
