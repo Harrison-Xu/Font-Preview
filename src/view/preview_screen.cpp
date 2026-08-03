@@ -7,6 +7,7 @@
 
 #include "asset_manager.h"
 #include "logger.h"
+#include "sound_player.h"
 
 #include <algorithm>
 #include <array>
@@ -55,8 +56,10 @@ bool is_next_value_key(uint32_t key) {
 
 } // namespace
 
-PreviewScreen::PreviewScreen(model::PreviewModel& model, app::AssetManager& assets)
-    : model_(model), assets_(assets) {}
+PreviewScreen::PreviewScreen(model::PreviewModel& model,
+                             app::AssetManager& assets,
+                             app::SoundPlayer& sound_player)
+    : model_(model), assets_(assets), sound_player_(sound_player) {}
 
 PreviewScreen::~PreviewScreen() {
     stop_size_repeat();
@@ -117,27 +120,25 @@ void PreviewScreen::handle_key(uint32_t key, bool pressed) {
         case LV_KEY_UP:
             stop_size_repeat();
             model_.select_previous_field();
+            sound_player_.play(app::SoundCue::Select);
             break;
         case 'x':
         case 'X':
         case LV_KEY_DOWN:
             stop_size_repeat();
             model_.select_next_field();
+            sound_player_.play(app::SoundCue::Select);
             break;
         case 'z':
         case 'Z':
         case LV_KEY_LEFT:
-            model_.select_previous_value();
-            preview_scroll_y_ = 0;
-            if (model_.selected_field() == model::PreviewField::Size) start_size_repeat(key);
-            break;
+            change_selected_value(-1, key);
+            return;
         case 'c':
         case 'C':
         case LV_KEY_RIGHT:
-            model_.select_next_value();
-            preview_scroll_y_ = 0;
-            if (model_.selected_field() == model::PreviewField::Size) start_size_repeat(key);
-            break;
+            change_selected_value(1, key);
+            return;
         case 'l':
         case 'L':
             scroll_preview(-kPreviewScrollStep);
@@ -162,17 +163,17 @@ void PreviewScreen::refresh() {
     apply_colors();
 
     if (!model_.has_font_face()) {
-        lv_obj_set_style_text_font(sample_, ui_regular_, 0);
+        lv_obj_set_style_text_font(sample_, ui_message_, 0);
         lv_label_set_text_fmt(sample_, "%s has no %s face.", model_.font_name(), model_.typeface_name());
         position_sample();
         return;
     }
 
     auto* preview_font = assets_.load_font(
-        model_.font_file_name(), model_.font_size(), model_.uses_synthetic_italic());
+        model_.font_file_name(), model_.font_size(), model_.uses_synthetic_italic(), model_.font_face_index());
     if (!preview_font) {
         LOG_ERROR("failed to load preview font: {} at {}px", model_.font_file_name(), model_.font_size());
-        lv_obj_set_style_text_font(sample_, ui_regular_, 0);
+        lv_obj_set_style_text_font(sample_, ui_message_, 0);
         lv_label_set_text(sample_, "Font file missing.\nInstall the required Debian font package.");
         position_sample();
         return;
@@ -230,9 +231,30 @@ void PreviewScreen::scroll_preview(int delta) {
     position_sample();
 }
 
+void PreviewScreen::change_selected_value(int direction, uint32_t key) {
+    const auto field = model_.selected_field();
+    const bool changed = direction < 0 ? model_.select_previous_value() : model_.select_next_value();
+    preview_scroll_y_ = 0;
+
+    if (!changed) {
+        sound_player_.play(app::SoundCue::Blocked);
+    }
+    else if ((field == model::PreviewField::Font || field == model::PreviewField::Typeface) &&
+             !model_.has_font_face()) {
+        sound_player_.play(app::SoundCue::Blocked);
+    }
+    else {
+        sound_player_.play(app::SoundCue::Select);
+    }
+
+    if (field == model::PreviewField::Size && changed) start_size_repeat(key);
+    refresh();
+}
+
 void PreviewScreen::start_size_repeat(uint32_t key) {
     stop_size_repeat();
     repeating_key_ = key;
+    size_repeat_has_fired_ = false;
     size_repeat_timer_ = lv_timer_create(size_repeat_cb, kSizeRepeatDelayMs, this);
 }
 
@@ -242,6 +264,7 @@ void PreviewScreen::stop_size_repeat() {
         size_repeat_timer_ = nullptr;
     }
     repeating_key_ = 0;
+    size_repeat_has_fired_ = false;
 }
 
 void PreviewScreen::size_repeat_cb(lv_timer_t* timer) {
@@ -251,15 +274,26 @@ void PreviewScreen::size_repeat_cb(lv_timer_t* timer) {
         return;
     }
 
+    bool changed = false;
     if (is_previous_value_key(screen->repeating_key_)) {
-        screen->model_.select_previous_value();
+        changed = screen->model_.select_previous_value();
     }
     else if (is_next_value_key(screen->repeating_key_)) {
-        screen->model_.select_next_value();
+        changed = screen->model_.select_next_value();
     }
     else {
         screen->stop_size_repeat();
         return;
+    }
+
+    if (!changed) {
+        screen->sound_player_.play(app::SoundCue::Blocked);
+        screen->stop_size_repeat();
+        return;
+    }
+    if (!screen->size_repeat_has_fired_) {
+        screen->size_repeat_has_fired_ = true;
+        screen->sound_player_.play(app::SoundCue::LongPress);
     }
 
     screen->preview_scroll_y_ = 0;
@@ -270,10 +304,12 @@ void PreviewScreen::size_repeat_cb(lv_timer_t* timer) {
 }
 
 bool PreviewScreen::load_ui_fonts() {
-    ui_small_ = assets_.load_font("NotoSansCJK-Regular.ttc", 8);
-    ui_regular_ = assets_.load_font("NotoSansCJK-Regular.ttc", 9);
-    ui_bold_ = assets_.load_font("NotoSansCJK-Bold.ttc", 10);
-    if (!ui_small_ || !ui_regular_ || !ui_bold_) {
+    constexpr uint32_t kUiFaceIndex = 2; // Noto Sans CJK SC
+    ui_small_ = assets_.load_font("NotoSansCJK-Regular.ttc", 8, false, kUiFaceIndex);
+    ui_regular_ = assets_.load_font("NotoSansCJK-Regular.ttc", 9, false, kUiFaceIndex);
+    ui_bold_ = assets_.load_font("NotoSansCJK-Bold.ttc", 10, false, kUiFaceIndex);
+    ui_message_ = assets_.load_font("NotoSansCJK-Regular.ttc", 16, false, kUiFaceIndex);
+    if (!ui_small_ || !ui_regular_ || !ui_bold_ || !ui_message_) {
         LOG_ERROR("Noto CJK UI fonts are missing or unreadable");
         return false;
     }
@@ -284,22 +320,22 @@ PreviewScreen::FieldRow PreviewScreen::create_field_row(std::size_t index, const
     FieldRow row;
     row.container = lv_obj_create(sidebar_);
     make_plain(row.container);
-    lv_obj_set_pos(row.container, 2, kRowTop + static_cast<int>(index) * (kRowHeight + kRowGap));
-    lv_obj_set_size(row.container, kSidebarWidth - 4, kRowHeight - 2);
+    lv_obj_set_pos(row.container, 1, kRowTop + static_cast<int>(index) * (kRowHeight + kRowGap));
+    lv_obj_set_size(row.container, kSidebarWidth - 2, kRowHeight - 2);
     lv_obj_set_style_radius(row.container, 2, 0);
 
     row.caption = lv_label_create(row.container);
     make_plain(row.caption);
     lv_label_set_text(row.caption, caption);
     lv_obj_set_style_text_font(row.caption, ui_small_, 0);
-    lv_obj_set_pos(row.caption, 4, 1);
+    lv_obj_set_pos(row.caption, 2, 1);
 
     row.value = lv_label_create(row.container);
     make_plain(row.value);
     lv_label_set_long_mode(row.value, LV_LABEL_LONG_MODE_CLIP);
-    lv_obj_set_width(row.value, kSidebarWidth - 12);
+    lv_obj_set_width(row.value, kSidebarWidth - 4);
     lv_obj_set_style_text_font(row.value, ui_regular_, 0);
-    lv_obj_set_pos(row.value, 4, 12);
+    lv_obj_set_pos(row.value, 2, 10);
     return row;
 }
 

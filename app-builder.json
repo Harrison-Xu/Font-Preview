@@ -1,6 +1,6 @@
 {
   "package_name": "fontpreview",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "app_name": "Font Preview",
   "bin_name": "font_preview",
   "description": "Preview multilingual text with Noto CJK, Go, Inter, DejaVu, and JetBrains Mono.",
@@ -39,7 +39,7 @@
     "source_repo": "https://github.com/Harrison-Xu/Font-Preview",
     "permissions": {
       "microphone": false,
-      "audio_output": false,
+      "audio_output": true,
       "network": false,
       "keyboard_input": true,
       "background_service": false,

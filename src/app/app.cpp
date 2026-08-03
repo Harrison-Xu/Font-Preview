@@ -170,8 +170,6 @@ int Application::run() {
         "NotoSansCJK-Bold.ttc",
         "NotoSerifCJK-Regular.ttc",
         "NotoSerifCJK-Bold.ttc",
-        "NotoSansMonoCJK-Regular.otf",
-        "NotoSansMonoCJK-Bold.otf",
     };
     for (const auto* font : kRequiredFonts) {
         if (assets_.resolve_font(font).empty()) {
@@ -180,7 +178,9 @@ int Application::run() {
         }
     }
 
-    screen_ = std::make_unique<view::PreviewScreen>(model_, assets_);
+    sound_player_.initialize();
+
+    screen_ = std::make_unique<view::PreviewScreen>(model_, assets_, sound_player_);
     if (!screen_->build()) {
         LOG_ERROR("failed to build preview screen");
         return 1;

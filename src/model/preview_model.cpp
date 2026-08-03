@@ -136,12 +136,12 @@ void PreviewModel::select_next_field() {
     selected_field_ = wrap_enum(selected_field_, 1, kFieldCount);
 }
 
-void PreviewModel::select_previous_value() {
-    change_value(-1);
+bool PreviewModel::select_previous_value() {
+    return change_value(-1);
 }
 
-void PreviewModel::select_next_value() {
-    change_value(1);
+bool PreviewModel::select_next_value() {
+    return change_value(1);
 }
 
 const char* PreviewModel::font_name() const {
@@ -205,7 +205,7 @@ const char* PreviewModel::font_file_name() const {
                     return bold ? "NotoSerifCJK-Bold.ttc" : "NotoSerifCJK-Regular.ttc";
                 case PreviewTypeface::Mono:
                 case PreviewTypeface::MonoItalic:
-                    return bold ? "NotoSansMonoCJK-Bold.otf" : "NotoSansMonoCJK-Regular.otf";
+                    return bold ? "NotoSansCJK-Bold.ttc" : "NotoSansCJK-Regular.ttc";
             }
             break;
         case PreviewFont::Go:
@@ -262,6 +262,33 @@ const char* PreviewModel::font_file_name() const {
     return "";
 }
 
+uint32_t PreviewModel::font_face_index() const {
+    if (font_ != PreviewFont::NotoCjk) return 0;
+
+    uint32_t regional_face = 2; // SC is the neutral default for non-CJK samples in this application.
+    switch (language_) {
+        case PreviewLanguage::SimplifiedChinese:
+            regional_face = 2;
+            break;
+        case PreviewLanguage::TraditionalChinese:
+            regional_face = 3;
+            break;
+        case PreviewLanguage::Japanese:
+            regional_face = 0;
+            break;
+        case PreviewLanguage::Korean:
+            regional_face = 1;
+            break;
+        default:
+            break;
+    }
+
+    if (typeface_ == PreviewTypeface::Mono || typeface_ == PreviewTypeface::MonoItalic) {
+        return regional_face + 5;
+    }
+    return regional_face;
+}
+
 bool PreviewModel::has_font_face() const {
     return font_file_name()[0] != '\0';
 }
@@ -272,27 +299,30 @@ bool PreviewModel::uses_synthetic_italic() const {
            typeface_ == PreviewTypeface::MonoItalic;
 }
 
-void PreviewModel::change_value(int direction) {
+bool PreviewModel::change_value(int direction) {
     switch (selected_field_) {
         case PreviewField::Font:
             font_ = wrap_enum(font_, direction, 5);
-            break;
+            return true;
         case PreviewField::Language:
             language_ = wrap_enum(language_, direction, kLanguages.size());
-            break;
+            return true;
         case PreviewField::Typeface:
             typeface_ = wrap_enum(typeface_, direction, 6);
-            break;
-        case PreviewField::Size:
+            return true;
+        case PreviewField::Size: {
+            const auto previous_size = font_size_;
             font_size_ = std::clamp(font_size_ + direction, kMinimumFontSize, kMaximumFontSize);
-            break;
+            return previous_size != font_size_;
+        }
         case PreviewField::Weight:
             weight_ = wrap_enum(weight_, direction, 2);
-            break;
+            return true;
         case PreviewField::Color:
             color_ = wrap_enum(color_, direction, 8);
-            break;
+            return true;
     }
+    return false;
 }
 
 } // namespace model

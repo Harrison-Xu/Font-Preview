@@ -32,7 +32,10 @@ public:
     std::filesystem::path resolve(const std::filesystem::path& relative_path) const;
     std::filesystem::path resolve_font(const std::filesystem::path& file_name) const;
 
-    lv_font_t* load_font(const std::filesystem::path& file_name, uint32_t size, bool synthetic_italic = false);
+    lv_font_t* load_font(const std::filesystem::path& file_name,
+                         uint32_t size,
+                         bool synthetic_italic = false,
+                         uint32_t face_index = 0);
 
 private:
     struct LoadedFont;

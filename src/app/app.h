@@ -8,6 +8,7 @@
 
 #include "asset_manager.h"
 #include "preview_model.h"
+#include "sound_player.h"
 
 #include <cstdint>
 #include <memory>
@@ -29,6 +30,7 @@ private:
     void handle_key(uint32_t key, bool pressed);
 
     AssetManager assets_;
+    SoundPlayer sound_player_{assets_};
     model::PreviewModel model_;
     std::unique_ptr<view::PreviewScreen> screen_;
     bool running_{true};

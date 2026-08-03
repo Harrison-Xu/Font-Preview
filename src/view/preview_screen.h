@@ -13,17 +13,18 @@
 
 namespace app {
 class AssetManager;
+class SoundPlayer;
 }
 
 namespace view {
 
 constexpr int kScreenWidth = 320;
 constexpr int kScreenHeight = 170;
-constexpr int kSidebarWidth = 78;
+constexpr int kSidebarWidth = 66;
 
 class PreviewScreen {
 public:
-    PreviewScreen(model::PreviewModel& model, app::AssetManager& assets);
+    PreviewScreen(model::PreviewModel& model, app::AssetManager& assets, app::SoundPlayer& sound_player);
     ~PreviewScreen();
 
     PreviewScreen(const PreviewScreen&) = delete;
@@ -45,6 +46,7 @@ private:
     void refresh_values();
     void position_sample();
     void scroll_preview(int delta);
+    void change_selected_value(int direction, uint32_t key);
     void start_size_repeat(uint32_t key);
     void stop_size_repeat();
     static void size_repeat_cb(lv_timer_t* timer);
@@ -53,6 +55,7 @@ private:
 
     model::PreviewModel& model_;
     app::AssetManager& assets_;
+    app::SoundPlayer& sound_player_;
     lv_obj_t* root_{nullptr};
     lv_obj_t* sidebar_{nullptr};
     lv_obj_t* preview_panel_{nullptr};
@@ -61,8 +64,10 @@ private:
     lv_font_t* ui_regular_{nullptr};
     lv_font_t* ui_small_{nullptr};
     lv_font_t* ui_bold_{nullptr};
+    lv_font_t* ui_message_{nullptr};
     lv_timer_t* size_repeat_timer_{nullptr};
     uint32_t repeating_key_{0};
+    bool size_repeat_has_fired_{false};
     int preview_scroll_y_{0};
 };
 

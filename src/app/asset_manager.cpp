@@ -47,6 +47,7 @@ struct AssetManager::LoadedFont {
     std::filesystem::path path;
     uint32_t size;
     bool synthetic_italic;
+    uint32_t face_index;
     lv_font_t* font;
 };
 
@@ -104,7 +105,8 @@ std::filesystem::path AssetManager::resolve_font(const std::filesystem::path& fi
 
 lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name,
                                    uint32_t size,
-                                   bool synthetic_italic) {
+                                   bool synthetic_italic,
+                                   uint32_t face_index) {
 #if LV_USE_FREETYPE
     auto path = resolve_font(file_name);
     if (path.empty()) {
@@ -114,13 +116,18 @@ lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name,
 
     auto existing = std::find_if(loaded_fonts_.begin(), loaded_fonts_.end(), [&](const auto& loaded_font) {
         return loaded_font && loaded_font->path == path && loaded_font->size == size &&
-               loaded_font->synthetic_italic == synthetic_italic;
+               loaded_font->synthetic_italic == synthetic_italic && loaded_font->face_index == face_index;
     });
     if (existing != loaded_fonts_.end()) {
         return (*existing)->font;
     }
 
-    lv_font_t* font = lv_freetype_font_create(path.string().c_str(),
+    auto freetype_path = path.string();
+    if (face_index > 0) {
+        freetype_path += "#" + std::to_string(face_index);
+    }
+
+    lv_font_t* font = lv_freetype_font_create(freetype_path.c_str(),
                                               LV_FREETYPE_FONT_RENDER_MODE_BITMAP,
                                               size,
                                               synthetic_italic ? LV_FREETYPE_FONT_STYLE_ITALIC
@@ -131,8 +138,8 @@ lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name,
     }
 
     loaded_fonts_.push_back(
-        std::make_unique<LoadedFont>(LoadedFont{path, size, synthetic_italic, font}));
-    LOG_INFO("loaded freetype font: {} ({}px{})", path.string(), size,
+        std::make_unique<LoadedFont>(LoadedFont{path, size, synthetic_italic, face_index, font}));
+    LOG_INFO("loaded freetype font: {} face {} ({}px{})", path.string(), face_index, size,
              synthetic_italic ? ", synthetic italic" : "");
     return font;
 #else

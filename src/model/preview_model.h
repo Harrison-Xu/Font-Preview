@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 namespace model {
 
@@ -80,8 +81,8 @@ public:
 
     void select_previous_field();
     void select_next_field();
-    void select_previous_value();
-    void select_next_value();
+    bool select_previous_value();
+    bool select_next_value();
 
     const char* font_name() const;
     const char* language_name() const;
@@ -90,11 +91,12 @@ public:
     const char* color_name() const;
     const char* sample_text() const;
     const char* font_file_name() const;
+    uint32_t font_face_index() const;
     bool has_font_face() const;
     bool uses_synthetic_italic() const;
 
 private:
-    void change_value(int direction);
+    bool change_value(int direction);
 
     PreviewField selected_field_{PreviewField::Font};
     PreviewFont font_{PreviewFont::NotoCjk};

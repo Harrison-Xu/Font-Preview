@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.31)
 
-project(font_preview VERSION 0.3.1 LANGUAGES C CXX)
+project(font_preview VERSION 0.4.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -71,6 +71,8 @@ if(NOT lvgl_POPULATED)
         cmake_policy(POP)
     endif()
 endif()
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch-lvgl-freetype-face-index.cmake")
+font_preview_patch_lvgl_freetype_face_index("${lvgl_SOURCE_DIR}")
 add_subdirectory("${lvgl_SOURCE_DIR}" "${lvgl_BINARY_DIR}" EXCLUDE_FROM_ALL)
 set(LVGL_SOURCE_DIR "${lvgl_SOURCE_DIR}")
 get_filename_component(LVGL_INCLUDE_PARENT "${LVGL_SOURCE_DIR}" DIRECTORY)
@@ -107,6 +109,12 @@ if(USE_DESKTOP)
     # SDL2
     # =========================
     find_package(SDL2 CONFIG REQUIRED)
+
+    # =========================
+    # SDL2_mixer
+    # =========================
+    find_package(SDL2_mixer CONFIG REQUIRED)
+    set(APP_AUDIO_LIBS SDL2_mixer::SDL2_mixer)
 
     # =========================
     # ZLIB
@@ -204,10 +212,12 @@ else()
     function(cm0_add_imported_library target_name library_path include_dirs)
         if(NOT TARGET ${target_name})
             add_library(${target_name} UNKNOWN IMPORTED)
-            set_target_properties(${target_name} PROPERTIES
-                IMPORTED_LOCATION "${library_path}"
-                INTERFACE_INCLUDE_DIRECTORIES "${include_dirs}"
-            )
+            set_target_properties(${target_name} PROPERTIES IMPORTED_LOCATION "${library_path}")
+            if(include_dirs)
+                set_target_properties(${target_name} PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES "${include_dirs}"
+                )
+            endif()
         endif()
     endfunction()
 
@@ -298,12 +308,22 @@ else()
 
     cm0_find_library(PTHREAD_LIBRARY pthread libpthread.so.0 libpthread.a)
     cm0_find_library(M_LIBRARY m libm.so libm.so.6 libm.a)
+    cm0_find_library(SDL2_LIBRARY SDL2-2.0 libSDL2-2.0.so.0)
+    cm0_find_library(SDL2_MIXER_LIBRARY SDL2_mixer-2.0 libSDL2_mixer-2.0.so.0)
     if(NOT PTHREAD_LIBRARY)
         message(FATAL_ERROR "Missing pthread library in BSP sysroot: ${CM0_SYSROOT}")
     endif()
     if(NOT M_LIBRARY)
         message(FATAL_ERROR "Missing math library in BSP sysroot: ${CM0_SYSROOT}")
     endif()
+    if(NOT SDL2_LIBRARY OR NOT SDL2_MIXER_LIBRARY)
+        message(FATAL_ERROR "Missing SDL2/SDL2_mixer runtime library in BSP sysroot: ${CM0_SYSROOT}")
+    endif()
+
+    cm0_add_imported_library(CM0::SDL2 "${SDL2_LIBRARY}" "")
+    cm0_add_imported_library(CM0::SDL2Mixer "${SDL2_MIXER_LIBRARY}" "")
+    set_target_properties(CM0::SDL2Mixer PROPERTIES INTERFACE_LINK_LIBRARIES CM0::SDL2)
+    set(APP_AUDIO_LIBS CM0::SDL2Mixer CM0::SDL2)
 
     set(PLATFORM_INCLUDE_DIR ${CM0_MULTIARCH_INCLUDE_DIRS})
     set(PLATFORM_LIBS ${PTHREAD_LIBRARY} ${M_LIBRARY})
@@ -511,6 +531,7 @@ target_link_libraries(${PROJECT_NAME}_core
         ${PROJECT_NAME}_view
         ${PROJECT_NAME}_model
         ${PROJECT_NAME}_platform
+        ${APP_AUDIO_LIBS}
 )
 
 # ====================================================
