@@ -21,6 +21,7 @@ constexpr int kPlaybackChannel = 0;
 constexpr int kMixerVolume = 26; // About 20% of SDL_mixer's 0-128 range.
 
 constexpr std::array<const char*, static_cast<std::size_t>(SoundCue::Count)> kCueAssets = {
+    "audio/uisfx-arcade-focus.wav",
     "audio/uisfx-arcade-select.wav",
     "audio/uisfx-arcade-blocked.wav",
     "audio/uisfx-arcade-long-press.wav",

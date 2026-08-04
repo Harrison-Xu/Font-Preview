@@ -1,9 +1,10 @@
 # UI SFX Arcade cues
 
-These three sounds come from the Arcade pack in
+These four sounds come from the Arcade pack in
 [`romainsimon/uisfx`](https://github.com/romainsimon/uisfx), commit
 `2001f3dac2d1cf86ad99cbad5cef222c3a8b9082`:
 
+- `focus`
 - `select`
 - `blocked`
 - `long-press`

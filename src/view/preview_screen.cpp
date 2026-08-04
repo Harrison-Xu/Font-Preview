@@ -120,14 +120,14 @@ void PreviewScreen::handle_key(uint32_t key, bool pressed) {
         case LV_KEY_UP:
             stop_size_repeat();
             model_.select_previous_field();
-            sound_player_.play(app::SoundCue::Select);
+            sound_player_.play(app::SoundCue::Focus);
             break;
         case 'x':
         case 'X':
         case LV_KEY_DOWN:
             stop_size_repeat();
             model_.select_next_field();
-            sound_player_.play(app::SoundCue::Select);
+            sound_player_.play(app::SoundCue::Focus);
             break;
         case 'z':
         case 'Z':

@@ -15,7 +15,8 @@ namespace app {
 class AssetManager;
 
 enum class SoundCue {
-    Select = 0,
+    Focus = 0,
+    Select,
     Blocked,
     LongPress,
     Count,

@@ -27,7 +27,7 @@ The screen has a compact parameter panel on the left and a scrollable, full-heig
 
 ## Interface sounds
 
-Font Preview uses three short cues from the CC0 [UI SFX](https://uisfx.com/) Arcade pack. `select` confirms a successful field or value change, `blocked` marks a size boundary or unsupported typeface, and `long-press` announces entry into rapid size adjustment. Ordinary preview scrolling and every repeated size step stay silent to avoid noisy high-frequency feedback.
+Font Preview uses four short cues from the CC0 [UI SFX](https://uisfx.com/) Arcade pack. `focus` marks Up/Down movement between parameter fields, while `select` confirms a successful Left/Right option change. `blocked` marks a size boundary or unsupported typeface, and `long-press` announces entry into rapid size adjustment. Ordinary preview scrolling and every repeated size step stay silent to avoid noisy high-frequency feedback.
 
 Arcade feedback is always enabled when the audio device is available. Audio reinforces the existing visual response and is never the only status signal. The bundled audio is dedicated to the public domain under CC0-1.0; see `assets/audio/LICENSE-UISFX-AUDIO.txt`.
 
@@ -68,4 +68,4 @@ cmake --build --preset cp0-cross-rel
 cpack --preset cp0-cross-deb
 ```
 
-The package is written to `dist/FontPreview_0.4.0_m5stack1_arm64.deb` and installs Noto CJK fonts below `/usr/share/font_preview/fonts/`.
+The package is written to `dist/FontPreview_0.4.1_m5stack1_arm64.deb` and installs Noto CJK fonts below `/usr/share/font_preview/fonts/`.
