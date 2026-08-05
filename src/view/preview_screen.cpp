@@ -164,7 +164,8 @@ void PreviewScreen::refresh() {
 
     if (!model_.has_font_face()) {
         lv_obj_set_style_text_font(sample_, ui_message_, 0);
-        lv_label_set_text_fmt(sample_, "%s has no %s face.", model_.font_name(), model_.typeface_name());
+        lv_label_set_text_fmt(sample_, "%s has no %s %s face.", model_.font_name(), model_.weight_name(),
+                              model_.typeface_name());
         position_sample();
         return;
     }

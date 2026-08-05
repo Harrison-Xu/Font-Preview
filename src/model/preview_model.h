@@ -50,7 +50,8 @@ enum class PreviewTypeface : std::size_t {
 };
 
 enum class PreviewWeight : std::size_t {
-    Regular = 0,
+    Light = 0,
+    Regular,
     Bold,
 };
 

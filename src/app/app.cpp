@@ -108,7 +108,7 @@ lv_display_t* init_display() {
         return nullptr;
     }
 
-    lv_sdl_window_set_title(display, "Font Preview");
+    lv_sdl_window_set_title(display, "FontPreview");
     lv_sdl_window_set_resizeable(display, false);
     lv_sdl_mouse_create();
     lv_sdl_mousewheel_create();
@@ -151,7 +151,7 @@ Application::~Application() = default;
 
 int Application::run() {
     logger::Logger::init();
-    logger::Logger::set_tag("font-preview");
+    logger::Logger::set_tag("fontpreview");
 
     lv_init();
 

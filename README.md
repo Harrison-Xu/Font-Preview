@@ -1,4 +1,4 @@
-# Font Preview
+# FontPreview
 
 A 320×170 typography preview application for CardputerZero, built with C++17, LVGL 9.5, SDL2/SDL2_mixer, and FreeType.
 
@@ -10,7 +10,7 @@ The screen has a compact parameter panel on the left and a scrollable, full-heig
 - Fonts: Noto CJK, Go, Inter, DejaVu, and JetBrains Mono
 - Typefaces: Sans, Sans Italic, Serif, Serif Italic, Mono, and Mono Italic
 - Sizes: 8–24 px in 1 px steps, stopping at either boundary; hold Left/Right for rapid adjustment
-- Weights: Regular and Bold
+- Weights: Light, Regular, and Bold. Light is available for Inter and JetBrains Mono.
 - Colors: Black/White, White/Black, Sepia, Terminal, Solarized, Navy, Amber, and Slate
 
 ## Controls
@@ -27,7 +27,7 @@ The screen has a compact parameter panel on the left and a scrollable, full-heig
 
 ## Interface sounds
 
-Font Preview uses four short cues from the CC0 [UI SFX](https://uisfx.com/) Arcade pack. `focus` marks Up/Down movement between parameter fields, while `select` confirms a successful Left/Right option change. `blocked` marks a size boundary or unsupported typeface, and `long-press` announces entry into rapid size adjustment. Ordinary preview scrolling and every repeated size step stay silent to avoid noisy high-frequency feedback.
+FontPreview uses four short cues from the CC0 [UI SFX](https://uisfx.com/) Arcade pack. `focus` marks Up/Down movement between parameter fields, while `select` confirms a successful Left/Right option change. `blocked` marks a size boundary or unsupported typeface or weight, and `long-press` announces entry into rapid size adjustment. Ordinary preview scrolling and every repeated size step stay silent to avoid noisy high-frequency feedback.
 
 Arcade feedback is always enabled when the audio device is available. Audio reinforces the existing visual response and is never the only status signal. The bundled audio is dedicated to the public domain under CC0-1.0; see `assets/audio/LICENSE-UISFX-AUDIO.txt`.
 
@@ -44,7 +44,7 @@ The application selects the correct regional face inside each collection: JP for
 
 The fonts are licensed under the SIL Open Font License 1.1. See `assets/fonts/LICENSE-NOTO-CJK.txt`.
 
-Go, Inter, DejaVu, and JetBrains Mono are loaded from their standard Debian system paths. The application package depends on `fonts-go`, `fonts-inter`, `fonts-dejavu-core`, `fonts-dejavu-extra`, `fonts-dejavu-mono`, and `fonts-jetbrains-mono`. Unsupported combinations are reported directly in the preview—for example, Inter does not provide Serif or Mono faces. Noto CJK italic selections use FreeType's synthetic italic rendering because Noto CJK does not ship native italic faces.
+Go, Inter, DejaVu, and JetBrains Mono are loaded from their standard Debian system paths. The application package depends on `fonts-go`, `fonts-inter`, `fonts-dejavu-core`, `fonts-dejavu-extra`, `fonts-dejavu-mono`, and `fonts-jetbrains-mono`. Inter and JetBrains Mono provide native Light and Light Italic files; the other configured families do not provide a Light face. Unsupported combinations are reported directly in the preview—for example, Inter does not provide Serif or Mono faces. Noto CJK italic selections use FreeType's synthetic italic rendering because Noto CJK does not ship native italic faces.
 
 ## Character coverage
 
@@ -57,7 +57,7 @@ Configure and build the macOS desktop preview:
 ```shell
 cmake --preset darwin-arm64
 cmake --build --preset darwin-arm64-dbg
-./build/darwin-arm64/Debug/font_preview
+./build/darwin-arm64/Debug/fontpreview
 ```
 
 Build the CardputerZero ARM64 Debian package:
@@ -68,4 +68,4 @@ cmake --build --preset cp0-cross-rel
 cpack --preset cp0-cross-deb
 ```
 
-The package is written to `dist/FontPreview_0.4.1_m5stack1_arm64.deb` and installs Noto CJK fonts below `/usr/share/font_preview/fonts/`.
+The package is written to `dist/FontPreview_0.4.1_m5stack1_arm64.deb` and installs Noto CJK fonts below `/usr/share/fontpreview/fonts/`.
