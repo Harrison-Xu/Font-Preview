@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.31)
 
-project(font_preview VERSION 0.4.1 LANGUAGES C CXX)
+project(fontpreview VERSION 0.4.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -72,7 +72,7 @@ if(NOT lvgl_POPULATED)
     endif()
 endif()
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/patch-lvgl-freetype-face-index.cmake")
-font_preview_patch_lvgl_freetype_face_index("${lvgl_SOURCE_DIR}")
+fontpreview_patch_lvgl_freetype_face_index("${lvgl_SOURCE_DIR}")
 add_subdirectory("${lvgl_SOURCE_DIR}" "${lvgl_BINARY_DIR}" EXCLUDE_FROM_ALL)
 set(LVGL_SOURCE_DIR "${lvgl_SOURCE_DIR}")
 get_filename_component(LVGL_INCLUDE_PARENT "${LVGL_SOURCE_DIR}" DIRECTORY)

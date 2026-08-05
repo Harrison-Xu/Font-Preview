@@ -1,8 +1,8 @@
 {
   "package_name": "fontpreview",
   "version": "0.4.1",
-  "app_name": "Font Preview",
-  "bin_name": "font_preview",
+  "app_name": "FontPreview",
+  "bin_name": "fontpreview",
   "description": "Preview multilingual text with Noto CJK, Go, Inter, DejaVu, and JetBrains Mono.",
   "runtime": "legacy-deb-only",
   "caps": [
@@ -10,33 +10,33 @@
   ],
   "store": {
     "summary": "Preview multilingual text with five font families.",
-    "description": "A focused typography preview for CardputerZero. Compare nine languages and code with five font families, six typeface styles, 8–24 px sizes, two weights, and eight color schemes.",
+    "description": "A focused typography preview for CardputerZero. Compare nine languages and code with five font families, six typeface styles, 8–24 px sizes, three weights, and eight color schemes.",
     "categories": [
       "Utilities"
     ],
-    "icon": "assets/images/font_preview.png",
+    "icon": "assets/images/fontpreview.png",
     "screenshots": [
-      "screenshot/font_preview.png"
+      "screenshot/fontpreview.png"
     ],
     "locales": {
       "zh-CN": {
         "title": "字体预览",
         "summary": "预览五种字体的多语言、字号和字重效果。",
-        "description": "专为 CardputerZero 设计的字体预览应用。可用九种语言和代码内容比较五种字体、六种字体形态、8–24 px 字号、两种字重和八种配色。"
+        "description": "专为 CardputerZero 设计的字体预览应用。可用九种语言和代码内容比较五种字体、六种字体形态、8–24 px 字号、三种字重和八种配色。"
       },
       "en": {
-        "title": "Font Preview",
+        "title": "FontPreview",
         "summary": "Preview multilingual text with five font families.",
-        "description": "A focused typography preview for CardputerZero. Compare nine languages and code with five font families, six typeface styles, 8–24 px sizes, two weights, and eight color schemes."
+        "description": "A focused typography preview for CardputerZero. Compare nine languages and code with five font families, six typeface styles, 8–24 px sizes, three weights, and eight color schemes."
       },
       "ja": {
         "title": "フォントプレビュー",
         "summary": "5 種類のフォントで多言語表示を確認できます。",
-        "description": "CardputerZero 向けのフォントプレビューアプリです。9 言語とコードを5種類のフォント、6種類の書体、8～24 px、2ウェイト、8配色で比較できます。"
+        "description": "CardputerZero 向けのフォントプレビューアプリです。9 言語とコードを5種類のフォント、6種類の書体、8～24 px、3ウェイト、8配色で比較できます。"
       }
     },
     "license": "MIT",
-    "source_repo": "https://github.com/Harrison-Xu/Font-Preview",
+    "source_repo": "https://github.com/Harrison-Xu/FontPreview",
     "permissions": {
       "microphone": false,
       "audio_output": true,

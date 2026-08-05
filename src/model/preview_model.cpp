@@ -174,7 +174,15 @@ const char* PreviewModel::typeface_name() const {
 }
 
 const char* PreviewModel::weight_name() const {
-    return weight_ == PreviewWeight::Regular ? "Regular" : "Bold";
+    switch (weight_) {
+        case PreviewWeight::Light:
+            return "Light";
+        case PreviewWeight::Regular:
+            return "Regular";
+        case PreviewWeight::Bold:
+            return "Bold";
+    }
+    return "Regular";
 }
 
 const char* PreviewModel::color_name() const {
@@ -189,6 +197,7 @@ const char* PreviewModel::sample_text() const {
 }
 
 const char* PreviewModel::font_file_name() const {
+    const bool light = weight_ == PreviewWeight::Light;
     const bool bold = weight_ == PreviewWeight::Bold;
     const bool italic = typeface_ == PreviewTypeface::SansItalic ||
                         typeface_ == PreviewTypeface::SerifItalic ||
@@ -196,6 +205,7 @@ const char* PreviewModel::font_file_name() const {
 
     switch (font_) {
         case PreviewFont::NotoCjk:
+            if (light) return "";
             switch (typeface_) {
                 case PreviewTypeface::Sans:
                 case PreviewTypeface::SansItalic:
@@ -209,6 +219,7 @@ const char* PreviewModel::font_file_name() const {
             }
             break;
         case PreviewFont::Go:
+            if (light) return "";
             if (typeface_ == PreviewTypeface::Sans || typeface_ == PreviewTypeface::SansItalic) {
                 if (bold && italic) return "/usr/share/fonts/fonts-go/Go-Bold-Italic.ttf";
                 if (bold) return "/usr/share/fonts/fonts-go/Go-Bold.ttf";
@@ -224,11 +235,14 @@ const char* PreviewModel::font_file_name() const {
             return "";
         case PreviewFont::Inter:
             if (typeface_ != PreviewTypeface::Sans && typeface_ != PreviewTypeface::SansItalic) return "";
+            if (light && italic) return "/usr/share/fonts/opentype/inter/Inter-LightItalic.otf";
+            if (light) return "/usr/share/fonts/opentype/inter/Inter-Light.otf";
             if (bold && italic) return "/usr/share/fonts/opentype/inter/Inter-BoldItalic.otf";
             if (bold) return "/usr/share/fonts/opentype/inter/Inter-Bold.otf";
             if (italic) return "/usr/share/fonts/opentype/inter/Inter-Italic.otf";
             return "/usr/share/fonts/opentype/inter/Inter-Regular.otf";
         case PreviewFont::DejaVu:
+            if (light) return "";
             switch (typeface_) {
                 case PreviewTypeface::Sans:
                 case PreviewTypeface::SansItalic:
@@ -252,6 +266,10 @@ const char* PreviewModel::font_file_name() const {
             break;
         case PreviewFont::JetBrainsMono:
             if (typeface_ != PreviewTypeface::Mono && typeface_ != PreviewTypeface::MonoItalic) return "";
+            if (light && italic) {
+                return "/usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-LightItalic.ttf";
+            }
+            if (light) return "/usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-Light.ttf";
             if (bold && italic) {
                 return "/usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-BoldItalic.ttf";
             }
@@ -316,7 +334,7 @@ bool PreviewModel::change_value(int direction) {
             return previous_size != font_size_;
         }
         case PreviewField::Weight:
-            weight_ = wrap_enum(weight_, direction, 2);
+            weight_ = wrap_enum(weight_, direction, 3);
             return true;
         case PreviewField::Color:
             color_ = wrap_enum(color_, direction, 8);

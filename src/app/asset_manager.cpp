@@ -16,7 +16,7 @@
 #include <utility>
 
 #ifndef APP_NAME
-#define APP_NAME "font_preview"
+#define APP_NAME "fontpreview"
 #endif
 
 #ifndef APP_CMAKE_ASSETS_ROOT

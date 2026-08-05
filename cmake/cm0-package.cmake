@@ -38,7 +38,7 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/audio/"
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/APPLaunch/share/images"
     FILES_MATCHING
-    PATTERN "font_preview*.png"
+    PATTERN "fontpreview*.png"
 )
 
 install(FILES "${APP_GENERATED_DIR}/${PROJECT_NAME}.desktop"

@@ -1,20 +1,20 @@
 # SPDX-FileCopyrightText: 2026 M5Stack Technology CO LTD
 # SPDX-License-Identifier: MIT
 
-function(font_preview_patch_lvgl_freetype_face_index lvgl_source_dir)
+function(fontpreview_patch_lvgl_freetype_face_index lvgl_source_dir)
     set(freetype_source "${lvgl_source_dir}/src/libs/freetype/lv_freetype.c")
     if(NOT EXISTS "${freetype_source}")
         message(FATAL_ERROR "LVGL FreeType source not found: ${freetype_source}")
     endif()
 
     file(READ "${freetype_source}" source_text)
-    set(patch_marker "Font Preview TTC face selector")
+    set(patch_marker "TTC face selector")
     if(source_text MATCHES "${patch_marker}")
         return()
     endif()
 
     set(original [=[    FT_Error error = FT_New_Face(ctx->library, node->pathname, 0, &face);]=])
-    set(replacement [=[    /* Font Preview TTC face selector: a trailing #0..#9 selects a collection face. */
+    set(replacement [=[    /* TTC face selector: a trailing #0..#9 selects a collection face. */
     const char * face_pathname = node->pathname;
     char * allocated_pathname = NULL;
     FT_Long face_index = 0;

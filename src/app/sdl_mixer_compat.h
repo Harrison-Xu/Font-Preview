@@ -1,5 +1,5 @@
 /*
- * Minimal SDL2/SDL2_mixer declarations used by Font Preview.
+ * Minimal SDL2/SDL2_mixer declarations used by FontPreview.
  *
  * CardputerZero ships the runtime libraries but its BSP sysroot does not
  * include their development headers. These declarations cover only the
