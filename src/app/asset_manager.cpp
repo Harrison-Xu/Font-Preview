@@ -30,6 +30,8 @@
 namespace app {
 namespace {
 
+constexpr const char* kSystemNotoFontDirectory = "/usr/share/fonts/opentype/noto";
+
 bool path_exists(const std::filesystem::path& path) {
     std::error_code ec;
     return std::filesystem::exists(path, ec);
@@ -100,7 +102,18 @@ std::filesystem::path AssetManager::resolve_font(const std::filesystem::path& fi
     if (file_name.is_absolute()) {
         return resolve(file_name);
     }
-    return resolve(std::filesystem::path{"fonts"} / file_name);
+
+    auto bundled_font = resolve(std::filesystem::path{"fonts"} / file_name);
+    if (!bundled_font.empty()) {
+        return bundled_font;
+    }
+
+    auto system_font = std::filesystem::path{kSystemNotoFontDirectory} / file_name;
+    if (path_exists(system_font)) {
+        return weakly_canonical_path(system_font);
+    }
+
+    return {};
 }
 
 lv_font_t* AssetManager::load_font(const std::filesystem::path& file_name,

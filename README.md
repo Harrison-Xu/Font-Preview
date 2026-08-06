@@ -2,7 +2,7 @@
 
 A 320×170 typography preview application for CardputerZero, built with C++17, LVGL 9.5, SDL2/SDL2_mixer, and FreeType.
 
-The screen has a compact parameter panel on the left and a scrollable, full-height text preview on the right. Interface labels use the bundled Noto CJK fonts; preview text can use Noto CJK or one of four Debian system font families.
+The screen has a compact parameter panel on the left and a scrollable, full-height text preview on the right. Interface labels use Noto CJK; on CardputerZero all five font families are loaded from Debian system packages.
 
 ## Preview options
 
@@ -33,18 +33,20 @@ Arcade feedback is always enabled when the audio device is available. Audio rein
 
 ## Fonts
 
-The project bundles the complete Regular and Bold Noto CJK faces from Debian 13 (trixie) package `fonts-noto-cjk` version `1:20240730+repack1-1`:
+On CardputerZero, the application loads the complete Regular and Bold Noto CJK faces from the system `fonts-noto-cjk` package:
 
-- `NotoSansCJK-Regular.ttc`
-- `NotoSansCJK-Bold.ttc`
-- `NotoSerifCJK-Regular.ttc`
-- `NotoSerifCJK-Bold.ttc`
+- `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc`
+- `/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc`
+- `/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc`
+- `/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc`
+
+The source tree keeps matching copies under `assets/fonts/` for the macOS desktop preview only. The CardputerZero Debian package does not install or duplicate these font files.
 
 The application selects the correct regional face inside each collection: JP for Japanese, KR for Korean, SC for Simplified Chinese, and TC for Traditional Chinese. Mono uses the matching regional Noto Sans Mono face already contained in the Sans TTC files, so separate Mono OTF copies are unnecessary.
 
-The fonts are licensed under the SIL Open Font License 1.1. See `assets/fonts/LICENSE-NOTO-CJK.txt`.
+The fonts are licensed under the SIL Open Font License 1.1. The source asset license is recorded in `assets/fonts/LICENSE-NOTO-CJK.txt`; installed CardputerZero fonts and their copyright information are managed by Debian's `fonts-noto-cjk` package.
 
-Go, Inter, DejaVu, and JetBrains Mono are loaded from their standard Debian system paths. The application package depends on `fonts-go`, `fonts-inter`, `fonts-dejavu-core`, `fonts-dejavu-extra`, `fonts-dejavu-mono`, and `fonts-jetbrains-mono`. Inter and JetBrains Mono provide native Light and Light Italic files; the other configured families do not provide a Light face. Unsupported combinations are reported directly in the preview—for example, Inter does not provide Serif or Mono faces. Noto CJK italic selections use FreeType's synthetic italic rendering because Noto CJK does not ship native italic faces.
+Go, Inter, DejaVu, and JetBrains Mono are also loaded from their standard Debian system paths. The application package depends on `fonts-noto-cjk`, `fonts-go`, `fonts-inter`, `fonts-dejavu-core`, `fonts-dejavu-extra`, `fonts-dejavu-mono`, and `fonts-jetbrains-mono`. Inter and JetBrains Mono provide native Light and Light Italic files; the other configured families do not provide a Light face. Unsupported combinations are reported directly in the preview—for example, Inter does not provide Serif or Mono faces. Noto CJK italic selections use FreeType's synthetic italic rendering because Noto CJK does not ship native italic faces.
 
 ## Character coverage
 
@@ -68,4 +70,4 @@ cmake --build --preset cp0-cross-rel
 cpack --preset cp0-cross-deb
 ```
 
-The package is written to `dist/FontPreview_0.4.2_m5stack1_arm64.deb` and installs Noto CJK fonts below `/usr/share/fontpreview/fonts/`.
+The package is written to `dist/FontPreview_0.4.3_m5stack1_arm64.deb` and uses the system font packages listed above without installing duplicate font files.

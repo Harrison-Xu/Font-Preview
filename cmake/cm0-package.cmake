@@ -23,10 +23,6 @@ install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/"
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/${APP_NAME}/fonts"
-    PATTERN ".DS_Store" EXCLUDE
-)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/images/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/${APP_NAME}/images"
     PATTERN ".DS_Store" EXCLUDE
@@ -47,10 +43,6 @@ install(FILES "${APP_GENERATED_DIR}/${PROJECT_NAME}.desktop"
 
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
     DESTINATION "${CMAKE_INSTALL_DOCDIR}"
-)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/LICENSE-NOTO-CJK.txt"
-    DESTINATION "${CMAKE_INSTALL_DOCDIR}"
-    RENAME "noto-cjk-license.txt"
 )
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/audio/LICENSE-UISFX-AUDIO.txt"
     DESTINATION "${CMAKE_INSTALL_DOCDIR}"
@@ -77,7 +69,7 @@ set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${APP_DEBIAN_ARCHITECTURE}")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${APP_MAINTAINER}")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libstdc++6, libgcc-s1, libfreetype6, libpng16-16, libjpeg62-turbo, zlib1g, libsdl2-2.0-0, libsdl2-mixer-2.0-0, fonts-go, fonts-inter, fonts-dejavu-core, fonts-dejavu-extra, fonts-dejavu-mono, fonts-jetbrains-mono")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libstdc++6, libgcc-s1, libfreetype6, libpng16-16, libjpeg62-turbo, zlib1g, libsdl2-2.0-0, libsdl2-mixer-2.0-0, fonts-noto-cjk, fonts-go, fonts-inter, fonts-dejavu-core, fonts-dejavu-extra, fonts-dejavu-mono, fonts-jetbrains-mono")
 set(CPACK_DEBIAN_PACKAGE_CONFLICTS "notocjkpreview")
 set(CPACK_DEBIAN_PACKAGE_REPLACES "notocjkpreview")
 set(CPACK_DEBIAN_PACKAGE_PROVIDES "notocjkpreview")
