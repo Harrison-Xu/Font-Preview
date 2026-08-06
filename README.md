@@ -68,4 +68,4 @@ cmake --build --preset cp0-cross-rel
 cpack --preset cp0-cross-deb
 ```
 
-The package is written to `dist/FontPreview_0.4.1_m5stack1_arm64.deb` and installs Noto CJK fonts below `/usr/share/fontpreview/fonts/`.
+The package is written to `dist/FontPreview_0.4.2_m5stack1_arm64.deb` and installs Noto CJK fonts below `/usr/share/fontpreview/fonts/`.
